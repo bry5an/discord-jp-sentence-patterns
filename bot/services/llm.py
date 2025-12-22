@@ -1,6 +1,7 @@
 import os
 import json
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,15 +11,15 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY must be set in .env")
 
-genai.configure(api_key=GEMINI_API_KEY)
+# Initialize the client for the new SDK
+client = genai.Client(api_key=GEMINI_API_KEY)
 
-# Use a model that supports JSON mode if possible, or just prompt carefully.
-# gemini-1.5-flash is good for this.
-model = genai.GenerativeModel("gemini-flash-latest")
+# Use gemini-flash-latest
+MODEL_ID = "gemini-flash-latest"
 
 async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pattern: str, grammar_meaning: str = ""):
     prompt = f"""
-    You are helping an adult male Japense learner practice spoken Japanese.
+    You are helping an adult male Japanese learner practice spoken Japanese.
     
     Generate 2 short, natural, casual spoken Japanese sentences.
     
@@ -50,9 +51,13 @@ async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pat
     """
 
     try:
-        response = await model.generate_content_async(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
+        # Use aio (asyncio) client
+        response = await client.aio.models.generate_content(
+            model=MODEL_ID,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            )
         )
         return json.loads(response.text)
     except Exception as e:
