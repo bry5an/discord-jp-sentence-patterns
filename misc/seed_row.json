@@ -1,8 +1,0 @@
-{
-  "pattern": "～てるんだけど",
-  "function": "soft topic introduction",
-  "register": "casual",
-  "constraints": "spoken Japanese, first-person, no rare words",
-  "example_en": "I was kind of wondering / I wanted to ask..."
-}
-
