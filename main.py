@@ -29,6 +29,7 @@ async def main():
     initial_extensions = [
         "bot.cogs.vocab",
         "bot.cogs.grammar",
+        "bot.cogs.daily",
     ]
 
     for extension in initial_extensions:

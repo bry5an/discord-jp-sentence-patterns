@@ -58,3 +58,12 @@ def get_random_active_vocab(limit: int = 3):
 def get_grammar_pattern_by_text(text: str):
     response = supabase.table("grammar_patterns").select("*").eq("pattern", text).execute()
     return response.data
+
+def get_random_example_phrase(limit: int = 1):
+    # Retrieve a larger batch to select from randomly in memory to simulate random selection
+    # Adjust limit as table grows
+    response = supabase.table("example_phrases").select("*").limit(20).execute()
+    import random
+    if response.data:
+        return random.sample(response.data, k=min(limit, len(response.data)))
+    return []
