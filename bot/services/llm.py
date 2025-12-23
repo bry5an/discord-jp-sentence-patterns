@@ -29,8 +29,9 @@ async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pat
     Constraints:
     - Must use the word: {vocab}
     - Must use the grammar pattern: {grammar_pattern}
+    - Avoid workplace or school settings
+    - Use casual, everyday contexts e.g., chatting with friends, family (particularly to small children or wife), shopping
     - First-person if possible
-    - Sound like everyday conversation between friends
     - Avoid rare or stiff/formal vocabulary
     - One sentence per example
     

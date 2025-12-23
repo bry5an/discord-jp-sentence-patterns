@@ -12,3 +12,8 @@ order by created_at;
 update public.grammar_patterns
 set constraints = 'new constraints'
 where pattern = 'pattern to edit';
+
+-- Edit reading of an active vocabulary word
+update public.active_vocab
+set reading = 'new reading'
+where word = 'word to edit';

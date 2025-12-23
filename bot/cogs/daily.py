@@ -1,10 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from bot.services import db
-import datetime
-
-VOCAB_DAILY_CHANNEL = "vocab-daily"
-TIME_TO_POST = datetime.time(hour=0, minute=0, second=0) # Default to midnight UTC for now, adjustable
+from bot.config import VOCAB_DAILY_CHANNEL, TIME_TO_POST
 
 class DailyCog(commands.Cog):
     def __init__(self, bot):
@@ -31,7 +28,8 @@ class DailyCog(commands.Cog):
         
         embed.add_field(name="Japanese", value=phrase['sentence_ja'], inline=False)
         if phrase.get('sentence_en'):
-            embed.add_field(name="English", value=phrase['sentence_en'], inline=False)
+            # hide English translation behind a Discord spoiler
+            embed.add_field(name="English", value=f"||{phrase['sentence_en']}||", inline=False)
         
         if phrase.get('usage_note'):
             embed.add_field(name="Note", value=phrase['usage_note'], inline=False)

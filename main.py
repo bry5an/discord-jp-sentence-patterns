@@ -30,6 +30,7 @@ async def main():
         "bot.cogs.vocab",
         "bot.cogs.grammar",
         "bot.cogs.daily",
+        "bot.cogs.help",
     ]
 
     for extension in initial_extensions:

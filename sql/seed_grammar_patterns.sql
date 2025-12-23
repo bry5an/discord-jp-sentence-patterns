@@ -78,5 +78,9 @@ values
 
   ('別に～ない', 'downplaying or minimizing', 'casual',
     'used to indicate something is not a big deal',
-    'It’s not like…')
+    'It’s not like…'),
+
+  ('なぜなら〜から', 'downplaying or minimizing', 'casual',
+      'used to indicate something is not a big deal',
+      'It’s not like…')
 on conflict (pattern) do nothing;

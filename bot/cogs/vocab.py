@@ -2,8 +2,7 @@ import discord
 from discord.ext import commands
 from bot.services import db, llm, dictionary
 import random
-
-ACTIVE_VOCAB_CHANNEL = "active-vocab-inbox"
+from bot.config import ACTIVE_VOCAB_CHANNEL
 
 class VocabCog(commands.Cog):
     def __init__(self, bot):
@@ -90,6 +89,62 @@ class VocabCog(commands.Cog):
         
         # Confirmation (Step 6)
         await processing_msg.edit(content=f"✅ {vocab_text} added\n• {generated_count} grammar-based speaking examples generated")
+
+    @commands.command(name="remove_vocab")
+    async def remove_vocab(self, ctx, *, word: str):
+        """Removes a vocabulary word and all associated sentences."""
+        
+        # 1. Check if word exists
+        # We need a way to get ID from word. 
+        # reusing get_active_vocab which returns a list
+        existing = db.get_active_vocab(word)
+        if not existing:
+            await ctx.send(f"❌ Vocabulary word **{word}** not found.")
+            return
+
+        vocab_entry = existing[0]
+        vocab_id = vocab_entry['id']
+        
+        # 2. Fetch sentences to show what will be deleted
+        phrases = db.get_example_phrases_by_vocab_id(vocab_id)
+        phrase_count = len(phrases)
+        
+        # 3. Confirmation Embed
+        embed = discord.Embed(
+            title=f"🗑️ Remove '{word}'?",
+            description=f"This will delete the word and **{phrase_count}** associated example sentences.",
+            color=discord.Color.red()
+        )
+        
+        if phrases:
+            preview_text = "\n".join([f"• {p['sentence_ja']}" for p in phrases[:3]])
+            if phrase_count > 3:
+                preview_text += f"\n...and {phrase_count - 3} more."
+            embed.add_field(name="Sentences to be deleted:", value=preview_text, inline=False)
+            
+        embed.set_footer(text="React with ✅ to confirm or wait 30s to cancel.")
+        
+        confirmation_msg = await ctx.send(embed=embed)
+        await confirmation_msg.add_reaction("✅")
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == "✅" and reaction.message.id == confirmation_msg.id
+
+        try:
+            import asyncio
+            await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
+        except asyncio.TimeoutError:
+            await confirmation_msg.edit(content="❌ Deletion cancelled (timed out).", embed=None)
+            await confirmation_msg.clear_reactions()
+            return
+
+        # 4. Delete
+        try:
+            db.delete_active_vocab(vocab_id)
+            await confirmation_msg.edit(content=f"✅ Successfully deleted **{word}** and {phrase_count} sentences.", embed=None)
+            await confirmation_msg.clear_reactions()
+        except Exception as e:
+            await confirmation_msg.edit(content=f"❌ Error deleting: {e}", embed=None)
 
 async def setup(bot):
     await bot.add_cog(VocabCog(bot))

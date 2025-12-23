@@ -1,6 +1,7 @@
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import random
 
 load_dotenv()
 
@@ -50,7 +51,6 @@ def get_random_active_vocab(limit: int = 3):
     # but let's try a simple fetch and shuffle in python for MVP if dataset is small.
     # Or just fetch top N.
     response = supabase.table("active_vocab").select("*").eq("status", "active").limit(50).execute()
-    import random
     if response.data:
         return random.sample(response.data, k=min(limit, len(response.data)))
     return []
@@ -63,7 +63,15 @@ def get_random_example_phrase(limit: int = 1):
     # Retrieve a larger batch to select from randomly in memory to simulate random selection
     # Adjust limit as table grows
     response = supabase.table("example_phrases").select("*").limit(20).execute()
-    import random
     if response.data:
         return random.sample(response.data, k=min(limit, len(response.data)))
     return []
+
+def get_example_phrases_by_vocab_id(vocab_id: str):
+    response = supabase.table("example_phrases").select("*").eq("vocab_id", vocab_id).execute()
+    return response.data
+
+def delete_active_vocab(vocab_id: str):
+    # active_vocab cascade deletes example_phrases
+    response = supabase.table("active_vocab").delete().eq("id", vocab_id).execute()
+    return response.data

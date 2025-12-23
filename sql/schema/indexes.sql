@@ -1,3 +1,4 @@
+-- Run after table schemas are created
 create index idx_active_vocab_status
   on public.active_vocab(status);
 
