@@ -3,6 +3,8 @@ import json
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
+import logging
+from bot.config import MODEL_ID
 
 load_dotenv()
 
@@ -14,8 +16,7 @@ if not GEMINI_API_KEY:
 # Initialize the client for the new SDK
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-# Use gemini-flash-latest
-MODEL_ID = "gemini-flash-latest"
+logger = logging.getLogger(__name__)
 
 async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pattern: str, grammar_meaning: str = ""):
     prompt = f"""
@@ -53,6 +54,7 @@ async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pat
 
     try:
         # Use aio (asyncio) client
+        logger.info("LLM: generate_sentences vocab=%s pattern=%s", vocab, grammar_pattern)
         response = await client.aio.models.generate_content(
             model=MODEL_ID,
             contents=prompt,
@@ -60,7 +62,8 @@ async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pat
                 response_mime_type="application/json"
             )
         )
+        logger.debug("LLM: raw response length=%d", len(response.text) if hasattr(response, 'text') and response.text else 0)
         return json.loads(response.text)
     except Exception as e:
-        print(f"Error generating sentences: {e}")
+        logger.exception("Error generating sentences for vocab=%s", vocab)
         return []
