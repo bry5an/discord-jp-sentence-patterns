@@ -2,6 +2,8 @@ import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import random
+import logging
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -12,6 +14,8 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in .env")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+logger = logging.getLogger(__name__)
 
 
 def get_active_vocab(word: str):
@@ -103,3 +107,59 @@ def delete_active_vocab(vocab_id: str):
     # active_vocab cascade deletes example_phrases
     response = supabase.table("active_vocab").delete().eq("id", vocab_id).execute()
     return response.data
+
+# Add helper to fetch an active_vocab row by id
+def get_active_vocab_by_id(vocab_id: str):
+    response = supabase.table("active_vocab").select("*").eq("id", vocab_id).execute()
+    if response.data:
+        return response.data[0]
+    return None
+
+
+def log_usage(vocab_id: str, grammar_id: str | None = None):
+    """Record usage of a vocab/grammar pair in `usage_history`.
+
+    If a row exists for (vocab_id, grammar_id) increment `times_used` and
+    update `last_used`. Otherwise insert a new row.
+    """
+    if not vocab_id:
+        logger.debug("log_usage called without vocab_id")
+        return None
+
+    # Build existence query: handle NULL grammar_id separately
+    if grammar_id is None:
+        existing = (
+            supabase.table("usage_history")
+            .select("*")
+            .eq("vocab_id", vocab_id)
+            .is_("grammar_id", None)
+            .execute()
+        )
+    else:
+        existing = (
+            supabase.table("usage_history")
+            .select("*")
+            .eq("vocab_id", vocab_id)
+            .eq("grammar_id", grammar_id)
+            .execute()
+        )
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    if existing.data and len(existing.data) > 0:
+        row = existing.data[0]
+        new_count = (row.get("times_used") or 0) + 1
+        logger.info("Updating usage_history for vocab_id=%s grammar_id=%s times=%d", vocab_id, grammar_id, new_count)
+        updated = (
+            supabase.table("usage_history")
+            .update({"times_used": new_count, "last_used": now_iso})
+            .eq("id", row.get("id"))
+            .execute()
+        )
+        return updated.data
+
+    # Insert new usage row (let DB defaults handle last_used/times_used if desired)
+    payload = {"vocab_id": vocab_id, "grammar_id": grammar_id}
+    logger.info("Inserting usage_history for vocab_id=%s grammar_id=%s", vocab_id, grammar_id)
+    inserted = supabase.table("usage_history").insert(payload).execute()
+    return inserted.data

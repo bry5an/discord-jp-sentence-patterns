@@ -20,6 +20,11 @@ class DailyCog(commands.Cog):
 
         phrase = phrases[0]
 
+        # Fetch vocab metadata (reading/meaning) from active_vocab
+        vocab = db.get_active_vocab_by_id(phrase.get("vocab_id"))
+        reading = vocab.get("reading") if vocab else None
+        # meaning = vocab.get("meaning") if vocab else None
+
         # Create Embed
         embed = discord.Embed(
             title="🇯🇵 Daily Japanese Vocabulary",
@@ -28,6 +33,10 @@ class DailyCog(commands.Cog):
         )
 
         embed.add_field(name="Japanese", value=phrase["sentence_ja"], inline=False)
+        if reading:
+            embed.add_field(name="Reading", value=reading, inline=False)
+        # if meaning:
+        #     embed.add_field(name="Meaning", value=meaning, inline=False)
         if phrase.get("sentence_en"):
             # hide English translation behind a Discord spoiler
             embed.add_field(
@@ -38,6 +47,13 @@ class DailyCog(commands.Cog):
             embed.add_field(name="Note", value=phrase["usage_note"], inline=False)
 
         await channel.send(embed=embed)
+
+        # Log usage in DB (records last used and increments times_used)
+        try:
+            db.log_usage(phrase.get("vocab_id"), phrase.get("grammar_id"))
+        except Exception as e:
+            # Avoid crashing the bot if DB logging fails
+            print(f"Failed to log usage_history: {e}")
 
     @tasks.loop(time=TIME_TO_POST)
     async def daily_post_loop(self):
