@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from bot.services import db, llm, dictionary
+import logging
 import random
 from bot.config import ACTIVE_VOCAB_CHANNEL
 
@@ -8,6 +9,7 @@ class VocabCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        logger = logging.getLogger(__name__)
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
@@ -18,6 +20,7 @@ class VocabCog(commands.Cog):
             return
 
         vocab_text = message.content.strip()
+        logger.info("Vocab inbox: received '%s' from %s in %s", vocab_text, message.author, message.channel.name)
         
         # Validation (Step 1)
         if not vocab_text or len(vocab_text) > 20: # arbitrary simple validation
@@ -64,6 +67,7 @@ class VocabCog(commands.Cog):
             return
 
         selected_patterns = random.sample(patterns, k=min(2, len(patterns)))
+        logger.info("Selected %d grammar patterns for %s", len(selected_patterns), vocab_text)
         
         generated_count = 0
 
