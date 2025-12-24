@@ -32,7 +32,7 @@ All data is stored in **Supabase (PostgreSQL)**, creating a personal phrasebook 
 To host this bot, you need:
 
 1.  **Python 3.12+**
-2.  **Supabase Project**: A free Supabase project for the PostgreSQL database.
+2.  **Supabase Project**: A free [Supabase](https://supabase.com/) project for the PostgreSQL database.
 3.  **Discord Bot Token**: From the [Discord Developer Portal](https://discord.com/developers/applications).
 4.  **Google Gemini API Key**: From [Google AI Studio](https://aistudio.google.com/).
 
@@ -46,7 +46,7 @@ This project uses `uv` for modern Python dependency management.
 pip install uv
 
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/bry5an/discord-jp-sentence-patterns
 cd discord-jp-sentence-patterns
 
 # Sync dependencies (creates virtualenv automatically)
@@ -69,13 +69,16 @@ GEMINI_API_KEY=your_google_api_key
 ```
 
 ### 3. Database Setup
-Run the SQL migration files located in the `sql/` directory in your Supabase SQL Editor in the following order:
+Run the SQL migration files located in the [sql/schema](sql/schema) directory in your Supabase SQL Editor in the following order:
 
 1.  `active_vocab_table.sql`
 2.  `grammar_patterns_table.sql`
 3.  `example_phrases_table.sql`
 4.  `usage_history.sql`
 5.  `seed.sql` (Important: Seeds the initial grammar patterns)
+
+#### Secure DB with Row Level Security
+Run the RLS setup and config files found in [sql/rls/](sql/rls) directory in your Supabase SQL Editor. The order does not matter as long as RLS has been turned on first for each table.
 
 ### 4. Running the Bot
 
@@ -84,12 +87,12 @@ Run the SQL migration files located in the `sql/` directory in your Supabase SQL
 uv run python main.py
 ```
 
-**Production (e.g., VPS, Docker):**
-Ensure `uv` is installed and run the same command, or build a Docker image based on the python environment.
-
 ## Channel Setup in Discord
-Create two text channels in your server:
+Create text channels for the bot to ingest vocab & grammar in your server:
 -   `#active-vocab-inbox`
 -   `#grammar-inbox`
+
+Create another channel to post daily to:
+-   `#vocab-daily`
 
 The bot listens specifically to these channel names.
