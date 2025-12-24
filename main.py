@@ -15,10 +15,12 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
+
 
 async def main():
     if not DISCORD_TOKEN:
@@ -40,6 +42,7 @@ async def main():
             print(f"Failed to load extension {extension}: {e}")
 
     await bot.start(DISCORD_TOKEN)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

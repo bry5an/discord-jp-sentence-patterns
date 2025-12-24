@@ -17,14 +17,21 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 # Use gemini-flash-latest
 MODEL_ID = "gemini-flash-latest"
 
-async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pattern: str, grammar_meaning: str = ""):
+
+async def generate_sentences(
+    vocab: str,
+    reading: str,
+    meaning: str,
+    grammar_pattern: str,
+    grammar_meaning: str = "",
+):
     prompt = f"""
     You are helping an adult male Japanese learner practice spoken Japanese.
     
     Generate 2 short, natural, casual spoken Japanese sentences.
     
     Target Vocabulary: {vocab} ({reading}) - {meaning}
-    Target Grammar Pattern: {grammar_pattern} {f'({grammar_meaning})' if grammar_meaning else ''}
+    Target Grammar Pattern: {grammar_pattern} {f"({grammar_meaning})" if grammar_meaning else ""}
     
     Constraints:
     - Must use the word: {vocab}
@@ -56,9 +63,7 @@ async def generate_sentences(vocab: str, reading: str, meaning: str, grammar_pat
         response = await client.aio.models.generate_content(
             model=MODEL_ID,
             contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
-            )
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
         return json.loads(response.text)
     except Exception as e:

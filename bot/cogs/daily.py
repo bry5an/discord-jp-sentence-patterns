@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from bot.services import db
 from bot.config import VOCAB_DAILY_CHANNEL, TIME_TO_POST
 
+
 class DailyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -18,28 +19,32 @@ class DailyCog(commands.Cog):
             return
 
         phrase = phrases[0]
-        
+
         # Create Embed
         embed = discord.Embed(
             title="🇯🇵 Daily Japanese Vocabulary",
-            description=f"Here is your daily sentence practice!",
-            color=discord.Color.green()
+            description="Here is your daily sentence practice!",
+            color=discord.Color.green(),
         )
-        
-        embed.add_field(name="Japanese", value=phrase['sentence_ja'], inline=False)
-        if phrase.get('sentence_en'):
+
+        embed.add_field(name="Japanese", value=phrase["sentence_ja"], inline=False)
+        if phrase.get("sentence_en"):
             # hide English translation behind a Discord spoiler
-            embed.add_field(name="English", value=f"||{phrase['sentence_en']}||", inline=False)
-        
-        if phrase.get('usage_note'):
-            embed.add_field(name="Note", value=phrase['usage_note'], inline=False)
+            embed.add_field(
+                name="English", value=f"||{phrase['sentence_en']}||", inline=False
+            )
+
+        if phrase.get("usage_note"):
+            embed.add_field(name="Note", value=phrase["usage_note"], inline=False)
 
         await channel.send(embed=embed)
 
     @tasks.loop(time=TIME_TO_POST)
     async def daily_post_loop(self):
         # Find channel
-        channel = discord.utils.get(self.bot.get_all_channels(), name=VOCAB_DAILY_CHANNEL)
+        channel = discord.utils.get(
+            self.bot.get_all_channels(), name=VOCAB_DAILY_CHANNEL
+        )
         if channel:
             await self.post_random_vocab(channel)
         else:
@@ -53,6 +58,7 @@ class DailyCog(commands.Cog):
     async def daily_vocab_command(self, ctx):
         """Manually trigger the daily vocab post."""
         await self.post_random_vocab(ctx.channel)
+
 
 async def setup(bot):
     await bot.add_cog(DailyCog(bot))
