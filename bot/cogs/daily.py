@@ -13,7 +13,7 @@ class DailyCog(commands.Cog):
         self.daily_post_loop.cancel()
 
     async def post_random_vocab(self, channel):
-        phrases = db.get_random_example_phrase(limit=1)
+        phrases = db.get_prioritized_example_phrase(limit=1)
         if not phrases:
             await channel.send("Could not find any vocabulary phrases to post!")
             return
@@ -70,7 +70,7 @@ class DailyCog(commands.Cog):
     async def before_daily_post_loop(self):
         await self.bot.wait_until_ready()
 
-    @commands.command(name="daily_vocab")
+    @commands.command(name="vocab")
     async def daily_vocab_command(self, ctx):
         """Manually trigger the daily vocab post."""
         await self.post_random_vocab(ctx.channel)

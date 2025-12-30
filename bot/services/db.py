@@ -96,6 +96,50 @@ def get_random_example_phrase(limit: int = 1):
     return []
 
 
+def get_prioritized_example_phrase(limit: int = 1, sample_pool: int = 200):
+    """Select example phrases preferring unused vocab first, then fewer-times-used.
+
+    This fetches up to `sample_pool` example phrases, aggregates usage counts
+    from `usage_history` grouped by `vocab_id`, and then chooses from the
+    lowest-scoring bucket (unused first, then lower total times_used).
+    """
+    # Fetch a sample pool of example phrases to choose from
+    resp = supabase.table("example_phrases").select("*").limit(sample_pool).execute()
+    phrases = resp.data or []
+    if not phrases:
+        return []
+
+    # Fetch usage history rows and aggregate times_used per vocab_id
+    uh_resp = supabase.table("usage_history").select("vocab_id,times_used").execute()
+    uh_rows = uh_resp.data or []
+    totals: dict = {}
+    for r in uh_rows:
+        vid = r.get("vocab_id")
+        if not vid:
+            continue
+        totals[vid] = totals.get(vid, 0) + (r.get("times_used") or 0)
+
+    # Compute score: (used_flag, total_times_used) where used_flag=0 for unused (preferred)
+    def score(p):
+        vid = p.get("vocab_id")
+        total = totals.get(vid, 0)
+        used_flag = 0 if total == 0 else 1
+        return (used_flag, total)
+
+    # Bucket phrases by score
+    buckets = {}
+    for p in phrases:
+        k = score(p)
+        buckets.setdefault(k, []).append(p)
+
+    best_score = min(buckets.keys())
+    candidates = buckets[best_score]
+
+    # Randomly choose up to `limit` from the best bucket
+    chosen = random.sample(candidates, k=min(limit, len(candidates)))
+    return chosen
+
+
 def get_example_phrases_by_vocab_id(vocab_id: str):
     response = (
         supabase.table("example_phrases").select("*").eq("vocab_id", vocab_id).execute()
