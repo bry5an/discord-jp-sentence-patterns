@@ -27,7 +27,7 @@ class HelpCog(commands.Cog):
         embed.add_field(
             name="🛠️ Commands",
             value=(
-                "`!daily_vocab`\n"
+                "`!vocab`\n"
                 "Manually trigger the daily vocabulary post.\n\n"
                 "`!remove_vocab <word>`\n"
                 "Remove a word and its sentences from the database.\n"
