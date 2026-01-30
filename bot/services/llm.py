@@ -15,7 +15,7 @@ if not GEMINI_API_KEY:
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Use gemini-flash-latest
-MODEL_ID = "gemini-flash-latest"
+MODEL_ID = "gemini-3-flash-preview"
 
 
 async def generate_sentences(
